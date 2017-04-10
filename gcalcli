@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # ** The MIT License **
 #
@@ -1734,6 +1734,38 @@ class gcalcli:
         else:
             self._IterateEvents(start, eventList, yearDate=False)
 
+    def MyAgendaQuery(self, startText='', endText=''):
+
+        if startText == '':
+            # convert now to midnight this morning and use for default
+            start = self.now.replace(year=1993,
+                                     hour=0,
+                                     minute=0,
+                                     second=0,
+                                     microsecond=0)
+        else:
+            try:
+                start = self.dateParser.fromString(startText)
+            except:
+                PrintErrMsg('Error: failed to parse start time\n')
+                return
+
+        if endText == '':
+            end = (self.now + timedelta(days=self.agendaLength))
+        else:
+            try:
+                end = self.dateParser.fromString(endText)
+            except:
+                PrintErrMsg('Error: failed to parse end time\n')
+                return
+
+        eventList = self._SearchForCalEvents(start, end, None)
+
+        if self.tsv:
+            self._tsv(start, eventList)
+        else:
+            self._IterateEvents(start, eventList, yearDate=False)
+
     def CalQuery(self, cmd, startText='', count=1):
 
         if startText == '':
@@ -2370,7 +2402,7 @@ def BowChickaWowWow():
         sys.exit(1)
 
     # No sense instaniating gcalcli for nothing
-    if not args[0] in ['list', 'search', 'agenda', 'calw', 'calm', 'quick',
+    if not args[0] in ['list', 'search', 'agenda', 'myagenda', 'calw', 'calm', 'quick',
                        'add', 'delete', 'edit', 'remind', 'import', 'help']:
         PrintErrMsg('Error: %s is an invalid command' % args[0])
         sys.exit(1)
@@ -2501,6 +2533,21 @@ def BowChickaWowWow():
 
         if not FLAGS.tsv:
             sys.stdout.write('\n')
+
+    elif args[0] == 'myagenda':
+        if len(args) == 3:  # start and end
+            gcal.MyAgendaQuery(startText=args[1], endText=args[2])
+        elif len(args) == 2:  # start
+            gcal.MyAgendaQuery(startText=args[1])
+        elif len(args) == 1:  # defaults
+            gcal.MyAgendaQuery()
+        else:
+            PrintErrMsg('Error: invalid myagenda arguments\n')
+            sys.exit(1)
+
+        if not FLAGS.tsv:
+            sys.stdout.write('\n')
+
 
     elif args[0] == 'calw':
         if not FLAGS.width:
